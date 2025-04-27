@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kişi Listesi</title>
+</head>
+<body>
+    <h1>Kişiler</h1>
+    <ul>
+        {% for kisi in kisiler %}
+            <li>
+                {% if kisi.kisi_tipi == 'gercek' %}
+                    👤 {{ kisi.ad }} {{ kisi.soyad }}
+                {% else %}
+                    🏢 {{ kisi.sirket_adi }}
+                {% endif %}
+            </li>
+        {% empty %}
+            <li>Henüz kayıtlı kişi yok.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
