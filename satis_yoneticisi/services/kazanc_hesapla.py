@@ -3,8 +3,8 @@ def kar_belirleyici(alis_fiyati, kar_orani, sabit_kar_degeri, vergi_orani):
     # Alış fiyatı, kar oranı ve sabit kar değerine göre kar hesaplar
 
     # Kar hesaplama
-    kar = alis_fiyati * (kar_orani / 100) + sabit_kar_degeri
+    net_kar = alis_fiyati * (kar_orani / 100) + sabit_kar_degeri
 
-    brut_kar = kar * vergi_orani
+    brut_kar = net_kar * vergi_orani
 
-    return kar, brut_kar
+    return net_kar, brut_kar
