@@ -1,13 +1,36 @@
-KARGO_FIYAT_LISTESI = {
-    "PTT": {0: 66.49, 1: 66.49, 2: 71.50, 3: 80.10},
-}
+from decimal import Decimal
+from kargo.models import *
+from urunler.models import Urun
 
 
-def kargo_hesapla(kargo_ucreti, vergili_kargo_ucreti, alis_fiyati, kar_orani, sabit_kar_degeri):
+def desi_heapla(urun: Urun, desi_bolme_faktoru):
     """
-    Kargo ücretini hesaplar.
+    Ürünün desisini hesaplar.
     """
-    net_kar = alis_fiyati * kar_orani + sabit_kar_degeri
-    satis_fiyati = alis_fiyati + net_kar + kargo_ucreti
-    vergili_satis_fiyati = satis_fiyati * (1 + vergili_kargo_ucreti)
-    toplam_vergi = vergili_satis_f
+    # Hacimsel desi hesaplama
+    hacim_desi = (urun.en * urun.boy * urun.yukseklik) / desi_bolme_faktoru
+    # En yüksek değer ağırlık ve hacimsel desinin karşılaştırılmasıyla belirlenir
+    desi = max(hacim_desi, urun.agirlik)
+    return desi
+
+
+def kargo_hesapla(kargo_ucreti, vergili_kargo_ucreti, urun: Urun, kargo_firmalari):
+    # Kargo ücretini hesaplar.
+    ucretler = {}
+
+    # Kargo firmalarına göre ücret hesaplama
+    for firma_adi in kargo_firmalari:
+        try:
+            firma = KargoFirmasi.objects.get(ad=firma_adi, etkin_mi=True)
+            desi = desi_heapla(urun, firma.desi_bolme_faktoru)
+            ucret_kaydi = KargoUcreti.objects.get(
+                kargo_firmasi=firma, desi__gte=desi)
+            ucretler[firma_adi] = float(ucret_kaydi.ucret)
+        except KargoFirmasi.DoesNotExist:
+            ucretler[firma_adi] = None
+        except KargoUcreti.DoesNotExist:
+            ucretler[firma_adi] = None
+
+    return {
+        "kargo_ucretleri": ucretler,
+    }
