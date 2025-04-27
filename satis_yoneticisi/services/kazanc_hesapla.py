@@ -1,8 +1,10 @@
-def kar_belirleyici(alis_fiyati, kar_oran, sabit_kar_degeri):
+def kar_belirleyici(alis_fiyati, kar_orani, sabit_kar_degeri, vergi_orani):
     # Kar belirleyici fonksiyonu
     # Alış fiyatı, kar oranı ve sabit kar değerine göre kar hesaplar
 
     # Kar hesaplama
-    kar = alis_fiyati * (kar_oran / 100) + sabit_kar_degeri
+    kar = alis_fiyati * (kar_orani / 100) + sabit_kar_degeri
 
-    return kar
+    brut_kar = kar * vergi_orani
+
+    return kar, brut_kar
