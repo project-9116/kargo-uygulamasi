@@ -8,5 +8,9 @@ class Urun(models.Model):
     yukseklik = models.DecimalField(max_digits=10, decimal_places=2, default=1)
     agirlik = models.DecimalField(max_digits=10, decimal_places=2, default=1)
 
+    class Meta:
+        verbose_name = "Ürün"
+        verbose_name_plural = 'Ürünler'
+
     def __str__(self):
         return self.ad
