@@ -1,44 +1,41 @@
 from django.contrib import admin
 from .models import Urun
-from kargo.models import KargoFirmasi
+from kargo.models import *
 from satis_yoneticisi.services.kargo_hesapla import kargo_hesapla, desi_heapla
 from django.core.exceptions import MultipleObjectsReturned
+from django.utils.html import format_html
 
 
 class UrunAdmin(admin.ModelAdmin):
-    list_display = ('ad', 'en', 'boy', 'yukseklik', 'agirlik',
-                    'get_kargo_fiyatlari', 'get_desi')
-    # readonly alan olarak ekle
-    readonly_fields = ('get_kargo_fiyatlari', 'get_desi')
+    list_display = ('ad', 'en', 'boy', 'yukseklik',
+                    'agirlik', 'get_desi_ve_ucretler')
+    readonly_fields = ('get_desi_ve_ucretler',)
 
-    @admin.display(description="Kargo Fiyatları")
-    def get_kargo_fiyatlari(self, obj):
-        """Ürüne ait kargo ücretlerini listele."""
-        firma_adi_listesi = KargoFirmasi.objects.filter(
-            etkin_mi=True).values_list('ad', flat=True)
-        kargo_firmalari = list(firma_adi_listesi)
+    @admin.display(description="Kargo Firmalarına Göre Desi ve Ücret")
+    def get_desi_ve_ucretler(self, obj):
+        aktif_firmalar = KargoFirmasi.objects.filter(etkin_mi=True)
+        satirlar = []
 
-        # Kargo ücretlerini ve fiyatları hesapla
-        try:
-            result = kargo_hesapla(
-                kargo_ucreti=0,  # Varsayılan kargo ücreti
-                vergili_kargo_ucreti=0,  # Vergili kargo ücreti
-                urun=obj,
-                kargo_firmalari=kargo_firmalari
+        for firma in aktif_firmalar:
+            desi_bolme_faktoru = firma.desi_bolme_faktoru or 3000
+            desi = desi_heapla(urun=obj, desi_bolme_faktoru=desi_bolme_faktoru)
+            desi_rounded = int(desi)  # KargoUcreti desi alanı tam sayı
+
+            # Uygun kargo ücretini bul
+            ucret_kaydi = KargoUcreti.objects.filter(
+                kargo_firmasi=firma, desi__gte=desi_rounded
+            ).order_by('desi').first()
+
+            if ucret_kaydi:
+                ucret = f"{ucret_kaydi.ucret:.2f} TL"
+            else:
+                ucret = "Ücret bulunamadı"
+
+            satirlar.append(
+                f"<li><strong>{firma.ad}:</strong> {desi:.2f} desi → {ucret}</li>"
             )
-        except MultipleObjectsReturned:
-            return "Birden fazla KargoUcreti bulundu."
 
-        fiyatlar = result["kargo_ucretleri"]
-        return ', '.join([f"{firma}: {fiyat} TL" for firma, fiyat in fiyatlar.items() if fiyat is not None])
-
-    @admin.display(description="Desi")
-    def get_desi(self, obj):
-        """Ürüne ait desiyi hesapla."""
-        # Desi hesaplamak için desi_heapla fonksiyonunu çağırıyoruz
-        desi_bolme_faktoru = 6000  # Bu değer genellikle 6000 olur, ihtiyaca göre ayarlanabilir
-        desi = desi_heapla(urun=obj, desi_bolme_faktoru=desi_bolme_faktoru)
-        return f"{desi:.2f} kg"
+        return format_html("<ul>{}</ul>", format_html("".join(satirlar)))
 
 
 admin.site.register(Urun, UrunAdmin)

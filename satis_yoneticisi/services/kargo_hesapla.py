@@ -14,9 +14,10 @@ def desi_heapla(urun: Urun, desi_bolme_faktoru):
     return desi
 
 
-def kargo_hesapla(kargo_ucreti, vergili_kargo_ucreti, urun: Urun, kargo_firmalari):
+def kargo_hesapla(kargo_ucreti, vergili_kargo_ucreti, urun: Urun, kargo_firmalari: list[KargoFirmasi]):
+
     # Kargo ücretini hesaplar.
-    ucretler = {}
+    ucretler = []
 
     # Kargo firmalarına göre ücret hesaplama
     for firma_adi in kargo_firmalari:
@@ -25,11 +26,20 @@ def kargo_hesapla(kargo_ucreti, vergili_kargo_ucreti, urun: Urun, kargo_firmalar
             desi = desi_heapla(urun, firma.desi_bolme_faktoru)
             ucret_kaydi = KargoUcreti.objects.get(
                 kargo_firmasi=firma, desi__gte=desi)
-            ucretler[firma_adi] = float(ucret_kaydi.ucret)
+            ucretler.append({
+                "firma_adi": firma_adi,
+                "ucret": float(ucret_kaydi.ucret)
+            })
         except KargoFirmasi.DoesNotExist:
-            ucretler[firma_adi] = None
+            ucretler.append({
+                "firma_adi": firma_adi,
+                "ucret": None
+            })
         except KargoUcreti.DoesNotExist:
-            ucretler[firma_adi] = None
+            ucretler.append({
+                "firma_adi": firma_adi,
+                "ucret": None
+            })
 
     return {
         "kargo_ucretleri": ucretler,
