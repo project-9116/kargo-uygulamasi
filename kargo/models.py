@@ -45,7 +45,7 @@ class KargoUcreti(models.Model):
     ucret = models.DecimalField(max_digits=10, decimal_places=2)
 
     class Meta:
-        unique_together = ('kargo_firmasi', 'desi')
+        unique_together = ('kargo_firmasi', 'desi', 'pazaryeri')
         ordering = ['kargo_firmasi', 'desi']
         verbose_name = "Kargo Ücreti"
         verbose_name_plural = 'Kargo Ücretleri'
