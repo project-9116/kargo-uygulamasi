@@ -11,7 +11,7 @@ class UrunAdmin(admin.ModelAdmin):
                     'agirlik', 'get_desi_ve_ucretler')
     readonly_fields = ('get_desi_ve_ucretler',)
 
-    @admin.display(description="Kargo Firmalarına Göre Desi ve Ücret")
+    @admin.display(description="Kargo Firmalarınca Desi Ücreti")
     def get_desi_ve_ucretler(self, obj):
         aktif_firmalar = KargoFirmasi.objects.filter(etkin_mi=True)
         satirlar = []
@@ -32,10 +32,11 @@ class UrunAdmin(admin.ModelAdmin):
                 ucret = "Ücret bulunamadı"
 
             satirlar.append(
-                f"<li><strong>{firma.ad}:</strong> {desi:.2f} desi → {ucret}</li>"
+                # f"<strong>{ucret_kaydi.pazaryeri} > {firma.ad}:</strong> {desi:.2f} desi ücreti: {ucret} + vergi = <hr>"
+                f"<strong>{ucret_kaydi.pazaryeri} & {firma.ad}:</strong> {ucret}<hr>"
             )
 
-        return format_html("<ul>{}</ul>", format_html("".join(satirlar)))
+        return format_html("{}", format_html("".join(satirlar)))
 
 
 admin.site.register(Urun, UrunAdmin)
